@@ -19,9 +19,9 @@ void NetworkLimiter::readNetworkLimits()
     QString uploadResult = execNetworkCmd(cmdGetUploadBandwidth);
 
     // group all regular expresions into one vector
-    std::vector<QRegExp> rxVec = {regExpValueWithUnit,
-                                  regExpValue,
-                                  regExpUnit};
+    std::vector<QRegularExpression> rxVec = {regExpValueWithUnit,
+                                            regExpValue,
+                                            regExpUnit};
 
     // get pairs for download and upload limit
     std::pair<int, QString> downloadLimit = extractBandwidthLimit(downloadResult, rxVec);
@@ -38,17 +38,20 @@ QString NetworkLimiter::execNetworkCmd(QString cmd)
     return CommandUtil::exec(command, args);
 }
 
-std::pair<int, QString> NetworkLimiter::extractBandwidthLimit(QString res, std::vector<QRegExp> &rxVec)
+std::pair<int, QString> NetworkLimiter::extractBandwidthLimit(QString res, std::vector<QRegularExpression> &rxVec)
 {
     int i = 0;
+    QStringList matches;
+    QString match;
     for (auto & rx: rxVec)
     {
-        res.contains(rx);
+        match = rx.match(res).captured(0);
+        matches.push_back(match);
         // two last regular expressions contains value and unit
-        if (i < (rxVec.size() - 2)) res = rx.cap();
+        if (i < (rxVec.size() - 2)) res = match;
         ++i;
     }
-    return std::make_pair(rxVec.at(rxVec.size() - 2).cap().toInt(), rxVec.at(rxVec.size() - 1).cap());
+    return std::make_pair(matches.at(rxVec.size() - 2).toInt(), matches.at(rxVec.size() - 1));
 }
 
 inline void NetworkLimiter::addBandwidthLimitsToCmb(QComboBox *cmb)

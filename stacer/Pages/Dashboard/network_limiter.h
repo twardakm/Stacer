@@ -37,13 +37,13 @@ protected:
     const QString cmdGetDownloadBandwidth = "/sbin/tc filter show dev eth0 parent ffff:";
     const QString cmdGetUploadBandwidth = "/sbin/wondershaper eth0";
     const QString cmdGetKbitValue = "grep -o '[0-9]*Kbit' | grep -o '[0-9]*'";
-    const QRegExp regExpValueWithUnit = QRegExp("([0-9]*Kbit.*(prio 5)+)|([0-9]*Kbit)");
-    const QRegExp regExpValue = QRegExp("[0-9]*");
-    const QRegExp regExpUnit = QRegExp("[A-Z]+[a-z]*");
+    const QRegularExpression regExpValueWithUnit = QRegularExpression("[0-9]+.bit((.*5\n)|( burst))");
+    const QRegularExpression regExpValue = QRegularExpression("[0-9]*");
+    const QRegularExpression regExpUnit = QRegularExpression("[A-Z]+[a-z]*");
     /* ----------------------------------- */
     QString execNetworkCmd(QString cmd);
     // returns pair: value and unit
-    std::pair<int, QString> extractBandwidthLimit(QString res, std::vector<QRegExp> & rxVec);
+    std::pair<int, QString> extractBandwidthLimit(QString res, std::vector<QRegularExpression> & rxVec);
 
     inline void addBandwidthLimitsToCmb(QComboBox *cmb);
     inline int kbitsToKBits(int kbits);
