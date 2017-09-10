@@ -22,6 +22,7 @@ DashboardPage::DashboardPage(QWidget *parent) :
     init();
 
     systemInformationInit();
+    ui->stackedWidget->setCurrentIndex(0);
 }
 
 void DashboardPage::init()
@@ -34,6 +35,11 @@ void DashboardPage::init()
     // line bars
     ui->lineBarsLayout->addWidget(downloadBar);
     ui->lineBarsLayout->addWidget(uploadBar);
+
+    // bandwidth limits
+    std::shared_ptr<NetworkLimiter> nL = std::make_shared<NetworkLimiter>(ui->downloadLimitCmb, ui->uploadLimitCmb);
+    setNetworkLimiterPtr(nL);
+    networkLimiter->bandwidthLimitsInit();
 
     // connections
     connect(timer, &QTimer::timeout, this, &DashboardPage::updateCpuBar);
@@ -190,3 +196,19 @@ void DashboardPage::updateNetworkBar()
     l_TXbytes = TXbytes;
 }
 
+
+void DashboardPage::on_setBandwidthLimitsBtn_clicked()
+{
+    ui->stackedWidget->setCurrentIndex(1);
+}
+
+void DashboardPage::on_backButtton_clicked()
+{
+    ui->stackedWidget->setCurrentIndex(0);
+}
+
+void DashboardPage::on_stackedWidget_currentChanged(int arg1)
+{
+    // read current network limits
+    if (arg1 == 1) networkLimiter->readNetworkLimits();
+}

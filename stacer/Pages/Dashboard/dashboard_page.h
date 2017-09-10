@@ -12,6 +12,9 @@
 #include <Managers/info_manager.h>
 #include "circlebar.h"
 #include "linebar.h"
+#include "network_limiter.h"
+
+#include <memory>
 
 namespace Ui {
     class DashboardPage;
@@ -37,6 +40,12 @@ private slots:
 
     void on_downloadUpdateBtn_clicked();
 
+    void on_setBandwidthLimitsBtn_clicked();
+
+    void on_backButtton_clicked();
+
+    void on_stackedWidget_currentChanged(int arg1);
+
 private:
     Ui::DashboardPage *ui;
 
@@ -50,6 +59,9 @@ private:
 
     QTimer *timer;
     InfoManager *im;
+
+    void setNetworkLimiterPtr(std::shared_ptr<NetworkLimiter> &nL){networkLimiter = nL;}
+    std::shared_ptr<NetworkLimiter> networkLimiter;
 };
 
 #endif // DASHBOARDPAGE_H
