@@ -20,6 +20,12 @@
    <string notr="true">Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="verticalSpacing">
+    <number>30</number>
+   </property>
    <item row="0" column="0">
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="currentIndex">
@@ -320,30 +326,13 @@
             </property>
            </spacer>
           </item>
-          <item row="0" column="0">
-           <widget class="QPushButton" name="backButtton">
-            <property name="cursor">
-             <cursorShape>PointingHandCursor</cursorShape>
-            </property>
-            <property name="text">
-             <string> Back</string>
-            </property>
-            <property name="icon">
-             <iconset resource="../../static.qrc">
-              <normaloff>:/static/themes/default/img/back.svg</normaloff>:/static/themes/default/img/back.svg</iconset>
-            </property>
-            <property name="iconSize">
-             <size>
-              <width>20</width>
-              <height>20</height>
-             </size>
-            </property>
-           </widget>
-          </item>
           <item row="1" column="0" colspan="2">
            <layout class="QVBoxLayout" name="verticalLayout_4">
             <property name="spacing">
              <number>30</number>
+            </property>
+            <property name="topMargin">
+             <number>15</number>
             </property>
             <item>
              <layout class="QGridLayout" name="gridLayout_2" columnminimumwidth="130,130,130,0">
@@ -427,6 +416,26 @@
              </widget>
             </item>
            </layout>
+          </item>
+          <item row="0" column="0">
+           <widget class="QPushButton" name="backButtton">
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="text">
+             <string> Back</string>
+            </property>
+            <property name="icon">
+             <iconset resource="../../static.qrc">
+              <normaloff>:/static/themes/default/img/back.svg</normaloff>:/static/themes/default/img/back.svg</iconset>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>20</width>
+              <height>20</height>
+             </size>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>

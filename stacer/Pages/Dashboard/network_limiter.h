@@ -20,13 +20,16 @@ class NetworkLimiter
 public:
     NetworkLimiter(QComboBox *downloadLimitCmb, QComboBox *uploadLimitCmb,
                    QSpinBox *downloadLimitCustom, QSpinBox *uploadLimitCustom,
-                   QPushButton * setLimitsBtn ,QString interface);
+                   QPushButton * setLimitsBtn, QString interface);
 
     // set bandwidth limits inside Combo Boxes
     void bandwidthLimitsInit();
 
     // read current network limits
     void readNetworkLimits();
+
+    // return all network interfaces available in the system
+    static QStringList getNetworkInterfacesList();
 
 protected:
     typedef std::pair<int, QString> band_pair_def;
@@ -41,6 +44,12 @@ protected:
     // standard bandwidth limits in KB/s
     const std::vector<int> bandwidthLimits = {50,100,150,250,350,500,750,1000};
 
+    /*
+     * ----------------------------------- */
+    static const QString cmdGetNetworkInterfaces;
+    static const QRegularExpression regExpInterface;
+    /* ----------------------------------- */
+
     /* commands to get current limits
      * ----------------------------------- */
     const QString interface;
@@ -50,7 +59,7 @@ protected:
     const QRegularExpression regExpValue = QRegularExpression("[0-9]*");
     const QRegularExpression regExpUnit = QRegularExpression("[A-Z]+[a-z]*");
     /* ----------------------------------- */
-    QString execNetworkCmd(QString cmd);
+    static QString execNetworkCmd(QString cmd);
     // returns pair: value and unit
     band_pair_def extractBandwidthLimit(QString res, std::vector<QRegularExpression> & rxVec);
     void updateLimitCmb(band_pair_def pair, QComboBox *cmb);

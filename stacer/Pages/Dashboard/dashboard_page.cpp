@@ -37,19 +37,14 @@ void DashboardPage::init()
     ui->lineBarsLayout->addWidget(uploadBar);
 
     // bandwidth limits
-    /*std::shared_ptr<NetworkLimiter> nL = std::make_shared<NetworkLimiter>(ui->downloadLimitCmb, ui->uploadLimitCmb, "eth0");
-    setNetworkLimiterPtr(nL);
-    networkLimiter->bandwidthLimitsInit();*/
-
-    QListWidgetItem *item = new QListWidgetItem(ui->networkListWidget);
-    NetworkInterface *net = new NetworkInterface(this);
-    item->setSizeHint(net->sizeHint());
-    ui->networkListWidget->setItemWidget(item,net);
-
-    /*QListWidgetItem *item2 = new QListWidgetItem(ui->networkListWidget);
-    NetworkInterface *net2 = new NetworkInterface();
-    item2->setSizeHint(net2->sizeHint());
-    ui->networkListWidget->setItemWidget(item2,net2);*/
+    QStringList interfaces = NetworkLimiter::getNetworkInterfacesList();
+    for (int i = 0; i < interfaces.size(); ++i)
+    {
+        QListWidgetItem *item = new QListWidgetItem(ui->networkListWidget);
+        NetworkInterface *net = new NetworkInterface(this, interfaces.at(i));
+        item->setSizeHint(net->sizeHint());
+        ui->networkListWidget->setItemWidget(item,net);
+    }
 
     // connections
     connect(timer, &QTimer::timeout, this, &DashboardPage::updateCpuBar);
@@ -219,6 +214,13 @@ void DashboardPage::on_backButtton_clicked()
 
 void DashboardPage::on_stackedWidget_currentChanged(int arg1)
 {
-    // read current network limits
-    // if (arg1 == 1) networkLimiter->readNetworkLimits();
+    if (arg1 == 1)
+    {
+        NetworkInterface *ni;
+        for (int i; i < ui->networkListWidget->count(); ++i)
+        {
+            ni = qobject_cast<NetworkInterface *>(ui->networkListWidget->itemWidget(ui->networkListWidget->item(0)));
+            ni->updateNetworkLimits();
+        }
+    }
 }

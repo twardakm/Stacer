@@ -1,5 +1,8 @@
 #include "network_limiter.h"
 
+const QString NetworkLimiter::cmdGetNetworkInterfaces = "ip link show";
+const QRegularExpression NetworkLimiter::regExpInterface = QRegularExpression("[0-9]+\: ([a-zA-Z0-9]+)\:");
+
 NetworkLimiter::NetworkLimiter(QComboBox *downloadLimitCmb, QComboBox *uploadLimitCmb,
                                QSpinBox *downloadLimitCustom, QSpinBox *uploadLimitCustom,
                                QPushButton * setLimitsBtn ,QString interface) :
@@ -13,7 +16,7 @@ NetworkLimiter::NetworkLimiter(QComboBox *downloadLimitCmb, QComboBox *uploadLim
 }
 
 void NetworkLimiter::bandwidthLimitsInit()
-{
+{    
     addBandwidthLimitsToCmb(downloadLimitCmb);
     addBandwidthLimitsToCmb(uploadLimitCmb);
 }
@@ -35,6 +38,18 @@ void NetworkLimiter::readNetworkLimits()
     // set combo boxes
     updateLimitCmb(downloadLimit, downloadLimitCmb);
     updateLimitCmb(uploadLimit, uploadLimitCmb);
+}
+
+QStringList NetworkLimiter::getNetworkInterfacesList()
+{
+    QStringList interfaces;
+    QString interface;
+
+    // find all interfaces at once
+    QRegularExpressionMatchIterator i = regExpInterface.globalMatch(execNetworkCmd(cmdGetNetworkInterfaces));
+    while (i.hasNext()) if((interface = i.next().captured(1)) != "lo") interfaces << interface;
+
+    return interfaces;
 }
 
 QString NetworkLimiter::execNetworkCmd(QString cmd)
