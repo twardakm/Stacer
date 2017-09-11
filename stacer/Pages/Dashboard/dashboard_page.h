@@ -13,8 +13,7 @@
 #include "circlebar.h"
 #include "linebar.h"
 #include "network_limiter.h"
-
-#include <memory>
+#include "network_interface.h"
 
 namespace Ui {
     class DashboardPage;
@@ -59,9 +58,6 @@ private:
 
     QTimer *timer;
     InfoManager *im;
-
-    void setNetworkLimiterPtr(std::shared_ptr<NetworkLimiter> &nL){networkLimiter = nL;}
-    std::shared_ptr<NetworkLimiter> networkLimiter;
 };
 
 #endif // DASHBOARDPAGE_H

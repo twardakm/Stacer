@@ -815,3 +815,83 @@ QCheckBox#historyTitle::indicator:checked {
     padding: 4 10;
     border-radius: 2;
 }
+
+
+/**************************
+    BANDWIDTH LIMITS
+***************************/
+
+#setBandwidthLimitsBtn, #setLimitsBtn {
+	 border: 1px solid @color02;
+    font-size: 10pt;
+    color: @color05;
+    background-color: @color01;
+    padding: 4 10;
+    border-radius: 2;
+}
+
+#DashboardPage QLabel {
+    font-size: 11pt;
+    color: @color12;
+}
+
+#DashboardPage QMenu {
+    background-color: @color01;
+}
+
+#DashboardPage QComboBox {
+    border: 1px solid @color02;
+    border-radius: 2;
+    background-color: @color01;
+    padding: 4 0 4 10;
+    font-size: 11pt;
+    color: @color05;
+    min-width: 100;
+}
+
+#DashboardPage QComboBox::drop-down {
+    background-color: @color01;
+    subcontrol-position: top right;
+    width: 14;
+    padding: 0 5;
+    color: @color05;
+
+    border-left-width: 1px;
+    border-left-color: @color01;
+    border-left-style: solid;
+    image: url(:/static/themes/default/img/down-arrow.svg);
+    border-top-right-radius: 2;
+    border-bottom-right-radius: 2;
+}
+
+#DashboardPage QComboBox::down-arrow:on {
+    background-color: @color01;
+    color: @color05;
+}
+
+#DashboardPage QComboBox QAbstractItemView {
+    background-color: @color01;
+    border: 0;
+}
+
+#networkListWidget {
+    background-color: transparent;
+}
+
+#networkListWidget::item {
+	 border-radius: 2;
+    background-color: @color01;
+}
+
+#networkListWidget::item:hover {
+    border-radius: 2;
+    background-color: @color02;
+}
+
+#NetworkInterface QSpinBox {
+    padding: 4 12;
+    border-radius: 10;
+    background: @color01;
+    border: 1px solid @color02;
+    color: @color12;
+}

@@ -1,8 +1,14 @@
 #include "network_limiter.h"
 
-NetworkLimiter::NetworkLimiter(QComboBox *downloadLimitCmb, QComboBox *uploadLimitCmb) :
+NetworkLimiter::NetworkLimiter(QComboBox *downloadLimitCmb, QComboBox *uploadLimitCmb,
+                               QSpinBox *downloadLimitCustom, QSpinBox *uploadLimitCustom,
+                               QPushButton * setLimitsBtn ,QString interface) :
     downloadLimitCmb(downloadLimitCmb),
-    uploadLimitCmb(uploadLimitCmb)
+    uploadLimitCmb(uploadLimitCmb),
+    downloadLimitCustom(downloadLimitCustom),
+    uploadLimitCustom(uploadLimitCustom),
+    setLimitsBtn(setLimitsBtn),
+    interface(interface)
 {
 }
 
@@ -14,7 +20,6 @@ void NetworkLimiter::bandwidthLimitsInit()
 
 void NetworkLimiter::readNetworkLimits()
 {
-    // /sbin/tc filter show dev eth0 parent ffff: | grep -o "[0-9]*Kbit" | grep -o "[0-9]*" && /sbin/wondershaper eth0 | grep "prio 5" | grep -o "[0-9]*Kbit" | grep -o "[0-9]*"
     QString downloadResult = execNetworkCmd(cmdGetDownloadBandwidth);
     QString uploadResult = execNetworkCmd(cmdGetUploadBandwidth);
 
@@ -24,10 +29,12 @@ void NetworkLimiter::readNetworkLimits()
                                             regExpUnit};
 
     // get pairs for download and upload limit
-    std::pair<int, QString> downloadLimit = extractBandwidthLimit(downloadResult, rxVec);
-    std::pair<int, QString> uploadLimit = extractBandwidthLimit(uploadResult, rxVec);
+    band_pair_def downloadLimit = extractBandwidthLimit(downloadResult, rxVec);
+    band_pair_def uploadLimit = extractBandwidthLimit(uploadResult, rxVec);
 
-    QString temp = downloadLimit.second;
+    // set combo boxes
+    updateLimitCmb(downloadLimit, downloadLimitCmb);
+    updateLimitCmb(uploadLimit, uploadLimitCmb);
 }
 
 QString NetworkLimiter::execNetworkCmd(QString cmd)
@@ -38,7 +45,7 @@ QString NetworkLimiter::execNetworkCmd(QString cmd)
     return CommandUtil::exec(command, args);
 }
 
-std::pair<int, QString> NetworkLimiter::extractBandwidthLimit(QString res, std::vector<QRegularExpression> &rxVec)
+NetworkLimiter::band_pair_def NetworkLimiter::extractBandwidthLimit(QString res, std::vector<QRegularExpression> &rxVec)
 {
     int i = 0;
     QStringList matches;
@@ -54,11 +61,27 @@ std::pair<int, QString> NetworkLimiter::extractBandwidthLimit(QString res, std::
     return std::make_pair(matches.at(rxVec.size() - 2).toInt(), matches.at(rxVec.size() - 1));
 }
 
+void NetworkLimiter::updateLimitCmb(band_pair_def pair, QComboBox *cmb)
+{
+    std::vector<int>::const_iterator it;
+    it = std::find(bandwidthLimits.begin(), bandwidthLimits.end(), getKBValue(pair));
+    // found
+    if (it!=bandwidthLimits.end()){
+        auto pos = std::distance(bandwidthLimits.begin(), it);
+        cmb->setCurrentIndex(pos+1); // first is unlimited
+    }
+    else cmb->setCurrentIndex(0);
+}
+
 inline void NetworkLimiter::addBandwidthLimitsToCmb(QComboBox *cmb)
 {
     cmb->addItem("unlimited");
     for (auto const& val: bandwidthLimits) cmb->addItem(QString::number(val) + " KB/s");
+    cmb->addItem("custom");
 }
 
-inline int NetworkLimiter::kbitsToKBits(int kbits) {return kbits<<3;}
-inline int NetworkLimiter::kBitsToKbits(int kBits) {return kBits>>3;}
+inline int NetworkLimiter::getKBValue(band_pair_def pair)
+{
+    // if kilobits divide by 8, if megabits divide by 0,008 (multiply by 125)
+    return (pair.second == "Kbit") ? (pair.first >> 3) : (pair.first * 125);
+}
