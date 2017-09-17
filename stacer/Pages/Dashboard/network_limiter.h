@@ -15,8 +15,9 @@
 
 #include <Managers/info_manager.h>
 
-class NetworkLimiter
+class NetworkLimiter : QObject
 {
+    Q_OBJECT
 public:
     NetworkLimiter(QComboBox *downloadLimitCmb, QComboBox *uploadLimitCmb,
                    QSpinBox *downloadLimitCustom, QSpinBox *uploadLimitCustom,
@@ -32,7 +33,15 @@ public:
     static QStringList getNetworkInterfacesList();
 
 protected:
-    typedef std::pair<int, QString> band_pair_def;
+    typedef enum e_BandwidthUnits
+    {
+        kilobit,
+        megabit,
+        kilobyte,
+        megabyte
+    } e_BandwidthUnits;
+
+    typedef std::pair<int, e_BandwidthUnits> band_pair_def;
 
     // combo boxes from Dashboard Page
     QComboBox *downloadLimitCmb;
@@ -58,14 +67,23 @@ protected:
     const QRegularExpression regExpValueWithUnit = QRegularExpression("[0-9]+.bit((.*5\n)|( burst))");
     const QRegularExpression regExpValue = QRegularExpression("[0-9]*");
     const QRegularExpression regExpUnit = QRegularExpression("[A-Z]+[a-z]*");
+    const QString cmdSetBandwidth = "/sbin/wondershaper " + interface + " <down> <up>";
     /* ----------------------------------- */
-    static QString execNetworkCmd(QString cmd);
+    static QString execNetworkCmd(QString cmd, bool sudo = false);
     // returns pair: value and unit
     band_pair_def extractBandwidthLimit(QString res, std::vector<QRegularExpression> & rxVec);
-    void updateLimitCmb(band_pair_def pair, QComboBox *cmb);
+    void updateLimitCmb(band_pair_def pair, QComboBox *cmb, QSpinBox *spin);
 
     inline void addBandwidthLimitsToCmb(QComboBox *cmb);
+
+    // convert between KB, MB and Kb, Mb
     inline int getKBValue(band_pair_def pair);
+    inline int getkbValue(band_pair_def pair);
+
+    void getBandwidthToSet(int & bandwidth, const QComboBox * cmb, const QSpinBox * spin);
+
+private slots:
+    void setButton();
 };
 
 #endif // NETWORK_LIMITER_H

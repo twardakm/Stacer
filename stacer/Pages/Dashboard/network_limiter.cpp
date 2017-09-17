@@ -13,6 +13,8 @@ NetworkLimiter::NetworkLimiter(QComboBox *downloadLimitCmb, QComboBox *uploadLim
     setLimitsBtn(setLimitsBtn),
     interface(interface)
 {
+    // connect buttons with events
+    connect(setLimitsBtn, SIGNAL(released()), this, SLOT(setButton()));
 }
 
 void NetworkLimiter::bandwidthLimitsInit()
@@ -36,8 +38,8 @@ void NetworkLimiter::readNetworkLimits()
     band_pair_def uploadLimit = extractBandwidthLimit(uploadResult, rxVec);
 
     // set combo boxes
-    updateLimitCmb(downloadLimit, downloadLimitCmb);
-    updateLimitCmb(uploadLimit, uploadLimitCmb);
+    updateLimitCmb(downloadLimit, downloadLimitCmb, downloadLimitCustom);
+    updateLimitCmb(uploadLimit, uploadLimitCmb, uploadLimitCustom);
 }
 
 QStringList NetworkLimiter::getNetworkInterfacesList()
@@ -52,12 +54,12 @@ QStringList NetworkLimiter::getNetworkInterfacesList()
     return interfaces;
 }
 
-QString NetworkLimiter::execNetworkCmd(QString cmd)
+QString NetworkLimiter::execNetworkCmd(QString cmd, bool sudo)
 {
     QStringList args = cmd.split(" ");
     QString command = args.at(0);
     args.pop_front();
-    return CommandUtil::exec(command, args);
+    return sudo ? CommandUtil::sudoExec(command, args) : CommandUtil::exec(command,args);
 }
 
 NetworkLimiter::band_pair_def NetworkLimiter::extractBandwidthLimit(QString res, std::vector<QRegularExpression> &rxVec)
@@ -65,6 +67,7 @@ NetworkLimiter::band_pair_def NetworkLimiter::extractBandwidthLimit(QString res,
     int i = 0;
     QStringList matches;
     QString match;
+    e_BandwidthUnits unit;
     for (auto & rx: rxVec)
     {
         match = rx.match(res).captured(0);
@@ -73,17 +76,26 @@ NetworkLimiter::band_pair_def NetworkLimiter::extractBandwidthLimit(QString res,
         if (i < (rxVec.size() - 2)) res = match;
         ++i;
     }
-    return std::make_pair(matches.at(rxVec.size() - 2).toInt(), matches.at(rxVec.size() - 1));
+
+    unit = (matches.at(rxVec.size() - 1) == "Kbit") ? e_BandwidthUnits::kilobit : e_BandwidthUnits::kilobyte;
+    return std::make_pair(matches.at(rxVec.size() - 2).toInt(), unit);
 }
 
-void NetworkLimiter::updateLimitCmb(band_pair_def pair, QComboBox *cmb)
+void NetworkLimiter::updateLimitCmb(band_pair_def pair, QComboBox *cmb, QSpinBox *spin)
 {
     std::vector<int>::const_iterator it;
-    it = std::find(bandwidthLimits.begin(), bandwidthLimits.end(), getKBValue(pair));
+    int kBValue = getKBValue(pair);
+    it = std::find(bandwidthLimits.begin(), bandwidthLimits.end(), kBValue);
     // found
     if (it!=bandwidthLimits.end()){
         auto pos = std::distance(bandwidthLimits.begin(), it);
         cmb->setCurrentIndex(pos+1); // first is unlimited
+    }
+    // if not found but not zero, set Custom
+    else if (kBValue != 0)
+    {
+        cmb->setCurrentIndex(cmb->count() - 1);
+        spin->setValue(kBValue);
     }
     else cmb->setCurrentIndex(0);
 }
@@ -98,5 +110,38 @@ inline void NetworkLimiter::addBandwidthLimitsToCmb(QComboBox *cmb)
 inline int NetworkLimiter::getKBValue(band_pair_def pair)
 {
     // if kilobits divide by 8, if megabits divide by 0,008 (multiply by 125)
-    return (pair.second == "Kbit") ? (pair.first >> 3) : (pair.first * 125);
+    return (pair.second == e_BandwidthUnits::kilobit) ? (pair.first >> 3) : (pair.first * 125);
+}
+
+inline int NetworkLimiter::getkbValue(band_pair_def pair)
+{
+    // if KB multiply by 8, if MB multiply by 8 and divide by 1024 (finally multiply by 0,0078125)
+    return (pair.second == e_BandwidthUnits::kilobyte) ? (pair.first << 3) : (pair.first * 0.0078125);
+}
+
+void NetworkLimiter::getBandwidthToSet(int &bandwidth, const QComboBox *cmb, const QSpinBox *spin)
+{
+    /*
+     * if unlimited, set 0
+     * if custom, take value from spinbox
+     */
+
+    if (cmb->currentIndex() == 0) bandwidth = 0;
+    else if (cmb->currentIndex() == cmb->count() - 1)
+        bandwidth = getkbValue(std::make_pair(spin->value(), e_BandwidthUnits::kilobyte));
+    else bandwidth = getkbValue(std::make_pair(cmb->currentText().split(" ")[0].toInt(), e_BandwidthUnits::kilobyte));
+}
+
+void NetworkLimiter::setButton()
+{
+    QString cmd = cmdSetBandwidth;
+    int download, upload;
+
+    getBandwidthToSet(download, downloadLimitCmb, downloadLimitCustom);
+    getBandwidthToSet(upload, uploadLimitCmb, uploadLimitCustom);
+
+    cmd.replace("<down>", QString::number(download));
+    cmd.replace("<up>", QString::number(upload));
+
+    execNetworkCmd(cmd, true);
 }
